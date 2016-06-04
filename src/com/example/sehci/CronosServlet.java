@@ -13,12 +13,11 @@ import com.google.gson.GsonBuilder;
 
 import javax.jdo.PersistenceManager;
 import javax.servlet.http.*;
-import javax.swing.text.DateFormatter;
 
 @SuppressWarnings("serial")
 public class CronosServlet extends HttpServlet {
 	
-	public void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		resp.setContentType("application/json");
 		PrintWriter out = resp.getWriter();
 		

@@ -31,15 +31,15 @@ public class Task {
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.name = new String(name != null ? name : "TheTaskBroke");
 	}
 
 	public void setDone(Boolean done) {
-		this.done = done;
+		this.done = (done != null ? done : true);
 	}
 	
 	public void setDate(Date date) {
-		this.date = date;
+		this.date = (date != null ? date : new Date(116, 6, 4));
 	}
 
 }
