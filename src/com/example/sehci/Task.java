@@ -8,7 +8,7 @@ import javax.jdo.annotations.PrimaryKey;
 
 @PersistenceCapable
 public class Task {
-	@PrimaryKey
+	@Persistent
 	private String name;
 
 	@Persistent
@@ -17,29 +17,36 @@ public class Task {
 	@Persistent
 	private Date date;
 	
+	@PrimaryKey
+	private String key;
+	
 
 	public String getName(){
-		return name;
+		return (name != null ? name : "No Name Supplied To Task");
 	}
 	
 	public Boolean getDone(){
-		return done;
+		return (done != null ? done : false);
 	}
 	
 	public Date getDate() {
-		return date;
+		return (date != null ? date : new Date(116, 6, 3));
+	}
+	
+	public void setKey(){
+		key = name + date.toString();
 	}
 
 	public void setName(String name) {
-		this.name = new String(name != null ? name : "TheTaskBroke");
+		this.name = name;
 	}
 
 	public void setDone(Boolean done) {
-		this.done = (done != null ? done : true);
+		this.done = done;
 	}
 	
 	public void setDate(Date date) {
-		this.date = (date != null ? date : new Date(116, 6, 4));
+		this.date = date;
 	}
 
 }

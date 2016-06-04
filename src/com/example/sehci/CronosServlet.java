@@ -36,6 +36,7 @@ public class CronosServlet extends HttpServlet {
 		task.setName(name);
 		task.setDate(date);
 		task.setDone(done);
+		task.setKey();
 		
 		pm.makePersistent(task);
 		
