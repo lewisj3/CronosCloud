@@ -27,14 +27,14 @@ public class CronosServlet extends HttpServlet {
 		PersistenceManager pm = PMF.getPMF().getPersistenceManager();
 		String op = req.getParameter("op");
 		if("cron".equals(op)){
+			Task task = (Task) pm.getObjectById("AllUserStatisticsStatisticsAdmin");
 			
 		}else if("userStats".equals(op)){
-			User user = User.authenticate(req, pm);
 			String requestQuery = req.getParameter("query");
 			Query query = pm.newQuery(requestQuery);
 			List<Task> tl = (List<Task>) query.execute();
 		}else{
-			Query query = pm.newQuery("SELECT * FROM Task WHERE username = 'StatisticsAdmin'");
+			Query query = pm.newQuery("SELECT * FROM Task WHERE id = 'StatsAdmin'");
 			Task task = (Task) query.execute();
 			int attempt = task.getAttempted();
 			int complete = task.getCompleted();
@@ -50,9 +50,6 @@ public class CronosServlet extends HttpServlet {
 		PrintWriter out = resp.getWriter();
 		PersistenceManager pm = PMF.getPMF().getPersistenceManager();
 		String op = req.getParameter("op");
-			if (op == null)
-				op = "list";
-
 			try {
 				switch (op) {
 				case "new":
@@ -61,34 +58,10 @@ public class CronosServlet extends HttpServlet {
 				case "update":
 					handleTaskUpdates(req, out, pm);
 					break;
-				case "register":
-					handleUserRegister(req, out, pm);
-					break;
-				case "login":
-					handleUserLogin(req, out, pm);
-					break;
-				case "touch":
-					handleUserSessionTouch(req, out, pm);
-					break;
-				case "create":
-					handleCreateEntry(req, out, pm);
-					break;
-				case "read":
-					handleReadEntry(req, out, pm);
-					break;
-				case "list":
-					handleListEntries(req, out, pm);
-					break;
-				case "search":
-					handleSearchEntries(req, out, pm);
-					break;
-				case "delete":
-					handleDeleteEntry(req, out, pm);
-					break;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				out.write(Util.toJsonPair("errormsg", e.getMessage()));
+				out.write(e.getMessage());
 			} finally {
 				pm.close();
 			}
@@ -96,17 +69,25 @@ public class CronosServlet extends HttpServlet {
 	
 
 	private void handleTaskUpdates(HttpServletRequest req, PrintWriter out, PersistenceManager pm) throws IOException {
-		User user = User.authenticate(req, pm);
-		String username = user.getUsername();
+		
+		if (req.getParameter("multiple").equals("false")){
+			Gson gson = new Gson();
+			BufferedReader reader = req.getReader();
+			Task task = (Task) gson.fromJson(reader, Task.class);
+			Task temp = (Task) pm.getObjectById(Task.class, task.getName() + task.getID());
+			temp.setAttempted(task.getAttempted());
+			temp.setCompleted(task.getCompleted());
+		}else{
 		Collection<Task> tasklist = readTaskList(req);
 		Iterator<Task> iter = tasklist.iterator();
 		while(iter.hasNext()){
 			Task t = (Task) iter.next();
-			Task temp = (Task) pm.getObjectById(Task.class, t.getName() + username);
+			Task temp = (Task) pm.getObjectById(Task.class, t.getName() + t.getID());
 			temp.setAttempted(t.getAttempted());
 			temp.setCompleted(t.getCompleted());
 		}
-		out.write(Util.toJson(user));
+		out.write("Success");
+		}
 	}
 	
 	private Collection<Task> readTaskList(HttpServletRequest req) throws IOException{
@@ -118,11 +99,11 @@ public class CronosServlet extends HttpServlet {
 	}
 
 	private void handleNewTask(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
 		String name = req.getParameter("name");
+		String id = req.getParameter("id");
 		int attempted = 0, completed = 0;
 		Task t = new Task();
-		t.setUsername(user.getUsername());
+		t.setID(id);
 		t.setName(name);
 		t.setAttempted(attempted);
 		t.setCompleted(completed);
@@ -141,6 +122,7 @@ public class CronosServlet extends HttpServlet {
 
 	public static String formatAsJson(Task task) {
 		HashMap<String, String> obj = new HashMap<String, String>();
+		obj.put("id", task.getID());
 		obj.put("name", task.getName());
 		obj.put("completed", Integer.toString(task.getCompleted()));
 		obj.put("attempted", Integer.toString(task.getAttempted()));
@@ -152,78 +134,6 @@ public class CronosServlet extends HttpServlet {
 	}
 	
 	
-	private Limerick getEntryAndVerifyOwnership(HttpServletRequest req, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
 
-		long id = Util.getLong(req, "id");
-		if (id == 0)
-			throw new IllegalArgumentException("Invalid or missing entry id.");
 
-		// verify ownership
-		Limerick entry = Limerick.loadById(id, pm);
-		if (!user.getUsername().equals(entry.getOwner()))
-			throw new IllegalStateException("Unauthorized access");
-		return entry;
-	}
-
-	private void handleCreateEntry(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
-
-		Limerick entry = new Limerick();
-		entry.setTitle(req.getParameter("title"));
-		entry.setWhen(Util.getLong(req, "when"));
-		entry.setBlather(req.getParameter("blather"));
-		entry.setTags(req.getParameter("tags"));
-		entry.setOwner(user.getUsername());
-
-		pm.makePersistent(entry);
-		out.write(Util.toJson(entry, true));
-	}
-
-	private void handleDeleteEntry(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		Limerick entry = getEntryAndVerifyOwnership(req, pm);
-		Limerick.delete(entry, pm);
-	}
-
-	private void handleListEntries(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
-		List<Limerick> entries = Limerick.listByOwner(user.getUsername(), pm);
-		out.write(Util.toJson(entries));
-	}
-
-	private void handleReadEntry(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		Limerick entry = getEntryAndVerifyOwnership(req, pm);
-		out.write(Util.toJson(entry, true));
-	}
-
-	private void handleSearchEntries(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
-		List<Limerick> entries = Limerick.listByQuery(user.getUsername(), req.getParameter("tag"), pm);
-		out.write(Util.toJson(entries));
-	}
-
-	/*private void handleUpdateEntry(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		Limerick entry = getEntryAndVerifyOwnership(req, pm);
-		entry.setTitle(req.getParameter("title"));
-		entry.setWhen(Util.getLong(req, "when"));
-		entry.setBlather(req.getParameter("blather"));
-		entry.setTags(req.getParameter("tags"));
-		pm.makePersistent(entry);
-		out.write(Util.toJson(entry, true));
-	}*/
-
-	private void handleUserLogin(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
-		out.write(Util.toJson(user));
-	}
-
-	private void handleUserRegister(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.create(req.getParameter("username"), req.getParameter("password"), pm);
-		out.write(Util.toJson(user));
-	}
-
-	private void handleUserSessionTouch(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
-		User user = User.authenticate(req, pm);
-		out.write(Util.toJson(user));
-	}
 }

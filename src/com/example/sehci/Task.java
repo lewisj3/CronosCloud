@@ -9,7 +9,6 @@ public class Task {
 	@Persistent
 	private String name;
 
-
 	@Persistent
 	private int completed;
 	
@@ -20,7 +19,7 @@ public class Task {
 	private String key;
 	
 	@Persistent
-	private String username;
+	private String id;
 	
 
 	public String getName(){
@@ -37,9 +36,14 @@ public class Task {
 		return attempted;
 	}
 	
-	public String getUsername(){
-		return username;
+	public String getID(){
+		return id;
 	}
+	
+	public void setID(String id){
+		this.id = id;
+	}
+	
 	
 	public void setCompleted(int completed){
 		this.completed = completed;
@@ -49,12 +53,9 @@ public class Task {
 		this.attempted = attempted;
 	}
 	
-	public void setUsername(String username){
-		this.username = username;
-	}
 	
 	public void setKey(){
-		key = name + username;
+		key = name + id;
 	}
 
 	public void setName(String name) {
