@@ -1,7 +1,5 @@
 package com.example.sehci;
 
-import java.util.Date;
-
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
@@ -11,42 +9,56 @@ public class Task {
 	@Persistent
 	private String name;
 
-	@Persistent
-	private Boolean done;
 
 	@Persistent
-	private Date date;
+	private int completed;
+	
+	@Persistent
+	private int attempted;
 	
 	@PrimaryKey
 	private String key;
+	
+	@Persistent
+	private String username;
 	
 
 	public String getName(){
 		return (name != null ? name : "No Name Supplied To Task");
 	}
 	
-	public Boolean getDone(){
-		return (done != null ? done : false);
+	
+
+	public int getCompleted(){
+		return completed;
 	}
 	
-	public Date getDate() {
-		return (date != null ? date : new Date(116, 6, 3));
+	public int getAttempted(){
+		return attempted;
+	}
+	
+	public String getUsername(){
+		return username;
+	}
+	
+	public void setCompleted(int completed){
+		this.completed = completed;
+	}
+	
+	public void setAttempted(int attempted){
+		this.attempted = attempted;
+	}
+	
+	public void setUsername(String username){
+		this.username = username;
 	}
 	
 	public void setKey(){
-		key = name + date.toString();
+		key = name + username;
 	}
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public void setDone(Boolean done) {
-		this.done = done;
-	}
-	
-	public void setDate(Date date) {
-		this.date = date;
 	}
 
 }
