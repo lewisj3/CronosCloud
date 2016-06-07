@@ -43,7 +43,9 @@ public class CronosServlet extends HttpServlet {
 			statsTask.setCompleted(totalCompleted);
 			pm.makePersistent(statsTask);
 			trans.commit();
-			out.write("Cron Job Completed");
+			HashMap<String, Integer> obj = new HashMap<String, Integer>();
+			obj.put("Success", new Integer(1));
+			out.write(new Gson().toJson(obj));
 			
 		}else if("userStats".equals(op)){
 			String requestQuery = req.getParameter("query");
@@ -104,8 +106,10 @@ public class CronosServlet extends HttpServlet {
 			temp.setAttempted(t.getAttempted());
 			temp.setCompleted(t.getCompleted());
 		}
-		out.write("Success");
 		}
+		HashMap<String, Integer> obj = new HashMap<String, Integer>();
+		obj.put("Success", new Integer(1));
+		out.write(new Gson().toJson(obj));
 	}
 	
 	private Collection<Task> readTaskList(HttpServletRequest req) throws IOException{
@@ -127,6 +131,9 @@ public class CronosServlet extends HttpServlet {
 		t.setCompleted(completed);
 		t.setKey();
 		pm.makePersistent(t);
+		HashMap<String, Integer> obj = new HashMap<String, Integer>();
+		obj.put("Success", new Integer(1));
+		out.write(new Gson().toJson(obj));
 	}
 
 	public static String formatAsJson() {
