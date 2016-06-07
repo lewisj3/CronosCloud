@@ -61,7 +61,7 @@ public class CronosServlet extends HttpServlet {
 			obj.put("Completed", Integer.valueOf(tempTask.getCompleted()));
 			out.write(new Gson().toJson(obj));
 		} else {
-			Query query = pm.newQuery(Task.class, "id == 1");
+			Query query = pm.newQuery(Task.class, "id == '1'");
 			List<Task> task = (List<Task>) query.execute();
 			pm.refresh(task.get(0));
 			int attempt = task.get(0).getAttempted();
