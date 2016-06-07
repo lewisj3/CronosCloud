@@ -31,7 +31,7 @@ public class CronosServlet extends HttpServlet {
 			Transaction trans = pm.currentTransaction();
 			trans.begin();
 			Task statsTask = (Task) pm.getObjectById(Task.class, "Stats1");
-			Query query = pm.newQuery(Task.class, "id > 1");
+			Query query = pm.newQuery(Task.class, "id != '1'");
 			List<Task> tasks = (List<Task>) query.execute();
 			int totalAttempted = 0, totalCompleted = 0;
 			for(Task tempTask : tasks){
@@ -52,7 +52,7 @@ public class CronosServlet extends HttpServlet {
 			Query query = pm.newQuery(requestQuery);
 			List<Task> tl = (List<Task>) query.execute();
 		} else if ("taskStats".equals(op)) {
-			int id = Integer.parseInt(req.getParameter("id"));
+			String id = req.getParameter("id");
 			String name = req.getParameter("name");
 			Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
 			pm.refresh(tempTask);
@@ -93,7 +93,9 @@ public class CronosServlet extends HttpServlet {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				out.write(e.getMessage());
+				HashMap<String, Integer> obj = new HashMap<String, Integer>();
+				obj.put("Success", new Integer(0));
+				out.write(new Gson().toJson(obj));
 			} finally {
 				pm.close();
 			}
@@ -103,10 +105,18 @@ public class CronosServlet extends HttpServlet {
 	{
 		Transaction trans = pm.currentTransaction();
 		trans.begin();
-		int id = Integer.parseInt(req.getParameter("id"));
+		String id = req.getParameter("id");
 		String name = req.getParameter("name");
-		Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
-		pm.deletePersistent(tempTask);
+		try{
+			Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
+			pm.deletePersistent(tempTask);
+		} catch (Exception e){
+			trans.rollback();
+			HashMap<String, Integer> obj = new HashMap<String, Integer>();
+			obj.put("Success", new Integer(0));
+			out.write(new Gson().toJson(obj));
+			return;
+		}
 		trans.commit();
 		HashMap<String, Integer> obj = new HashMap<String, Integer>();
 		obj.put("Success", new Integer(1));
@@ -114,7 +124,7 @@ public class CronosServlet extends HttpServlet {
 	}
 	
 
-	private void handleTaskUpdates(HttpServletRequest req, PrintWriter out, PersistenceManager pm) throws IOException {
+	private void handleTaskUpdates(HttpServletRequest req, PrintWriter out, PersistenceManager pm) throws IOException, Exception {
 		
 		if (req.getParameter("multiple").equals("false")){
 			Gson gson = new Gson();
@@ -138,7 +148,7 @@ public class CronosServlet extends HttpServlet {
 		out.write(new Gson().toJson(obj));
 	}
 	
-	private Collection<Task> readTaskList(HttpServletRequest req) throws IOException{
+	private Collection<Task> readTaskList(HttpServletRequest req) throws IOException, Exception{
 		Gson mGson = new Gson();
 		BufferedReader reader = req.getReader();
 		Type collectionType = new TypeToken<Collection<Task>>(){}.getType();
@@ -148,7 +158,7 @@ public class CronosServlet extends HttpServlet {
 
 	private void handleNewTask(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
 		String name = req.getParameter("name");
-		int id = Integer.parseInt(req.getParameter("id"));
+		String id = req.getParameter("id");
 		int attempted = 0, completed = 0;
 		Task t = new Task();
 		t.setID(id);
