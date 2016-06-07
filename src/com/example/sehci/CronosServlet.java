@@ -55,11 +55,23 @@ public class CronosServlet extends HttpServlet {
 			int id = Integer.parseInt(req.getParameter("id"));
 			String name = req.getParameter("name");
 			Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
+			pm.refresh(tempTask);
 			HashMap<String, Integer> obj = new HashMap<String, Integer>();
 			obj.put("Attempted", Integer.valueOf(tempTask.getAttempted()));
 			obj.put("Completed", Integer.valueOf(tempTask.getCompleted()));
 			out.write(new Gson().toJson(obj));
-		} else {
+		} else if ("taskDel".equals(op)){
+			Transaction trans = pm.currentTransaction();
+			trans.begin();
+			int id = Integer.parseInt(req.getParameter("id"));
+			String name = req.getParameter("name");
+			Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
+			pm.deletePersistent(tempTask);
+			trans.commit();
+			HashMap<String, Integer> obj = new HashMap<String, Integer>();
+			obj.put("Success", new Integer(1));
+			out.write(new Gson().toJson(obj));
+		}else {
 			Query query = pm.newQuery(Task.class, "id == 1");
 			List<Task> task = (List<Task>) query.execute();
 			pm.refresh(task.get(0));
