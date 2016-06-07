@@ -60,18 +60,7 @@ public class CronosServlet extends HttpServlet {
 			obj.put("Attempted", Integer.valueOf(tempTask.getAttempted()));
 			obj.put("Completed", Integer.valueOf(tempTask.getCompleted()));
 			out.write(new Gson().toJson(obj));
-		} else if ("taskDel".equals(op)){
-			Transaction trans = pm.currentTransaction();
-			trans.begin();
-			int id = Integer.parseInt(req.getParameter("id"));
-			String name = req.getParameter("name");
-			Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
-			pm.deletePersistent(tempTask);
-			trans.commit();
-			HashMap<String, Integer> obj = new HashMap<String, Integer>();
-			obj.put("Success", new Integer(1));
-			out.write(new Gson().toJson(obj));
-		}else {
+		} else {
 			Query query = pm.newQuery(Task.class, "id == 1");
 			List<Task> task = (List<Task>) query.execute();
 			pm.refresh(task.get(0));
@@ -98,6 +87,9 @@ public class CronosServlet extends HttpServlet {
 				case "update":
 					handleTaskUpdates(req, out, pm);
 					break;
+				case "taskDel":
+					handleTaskDel(req, out, pm);
+					break;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -105,6 +97,20 @@ public class CronosServlet extends HttpServlet {
 			} finally {
 				pm.close();
 			}
+	}
+	
+	private void handleTaskDel(HttpServletRequest req, PrintWriter out, PersistenceManager pm)
+	{
+		Transaction trans = pm.currentTransaction();
+		trans.begin();
+		int id = Integer.parseInt(req.getParameter("id"));
+		String name = req.getParameter("name");
+		Task tempTask = (Task) pm.getObjectById(Task.class, name + id);
+		pm.deletePersistent(tempTask);
+		trans.commit();
+		HashMap<String, Integer> obj = new HashMap<String, Integer>();
+		obj.put("Success", new Integer(1));
+		out.write(new Gson().toJson(obj));
 	}
 	
 
