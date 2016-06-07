@@ -15,6 +15,7 @@ import com.google.gson.reflect.TypeToken;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
+import javax.jdo.Transaction;
 import javax.servlet.http.*;
 
 
@@ -27,22 +28,39 @@ public class CronosServlet extends HttpServlet {
 		PersistenceManager pm = PMF.getPMF().getPersistenceManager();
 		String op = req.getParameter("op");
 		if("cron".equals(op)){
-			Task task = (Task) pm.getObjectById("AllUserStatisticsStatisticsAdmin");
+			Transaction trans = pm.currentTransaction();
+			trans.begin();
+			Task statsTask = (Task) pm.getObjectById(Task.class, "Stats1");
+			Query query = pm.newQuery(Task.class, "id > 1");
+			List<Task> tasks = (List<Task>) query.execute();
+			int totalAttempted = 0, totalCompleted = 0;
+			for(Task tempTask : tasks){
+				pm.refresh(tempTask);
+				totalAttempted += tempTask.getAttempted();
+				totalCompleted += tempTask.getCompleted();
+			}
+			statsTask.setAttempted(totalAttempted);
+			statsTask.setCompleted(totalCompleted);
+			pm.makePersistent(statsTask);
+			trans.commit();
+			out.write("Cron Job Completed");
 			
 		}else if("userStats".equals(op)){
 			String requestQuery = req.getParameter("query");
 			Query query = pm.newQuery(requestQuery);
 			List<Task> tl = (List<Task>) query.execute();
 		}else{
-			Query query = pm.newQuery("SELECT * FROM Task WHERE id = 'StatsAdmin'");
-			Task task = (Task) query.execute();
-			int attempt = task.getAttempted();
-			int complete = task.getCompleted();
+			Query query = pm.newQuery(Task.class, "id == 1");
+			List<Task> task = (List<Task>) query.execute();
+			pm.refresh(task.get(0));
+			int attempt = task.get(0).getAttempted();
+			int complete = task.get(0).getCompleted();
 			HashMap<String, Integer> obj = new HashMap<String, Integer>();
 			obj.put("Attempted", new Integer(attempt));
 			obj.put("Completed", new Integer(complete));
 			out.write(new Gson().toJson(obj));
 		}
+		pm.close();
 	}
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -100,7 +118,7 @@ public class CronosServlet extends HttpServlet {
 
 	private void handleNewTask(HttpServletRequest req, PrintWriter out, PersistenceManager pm) {
 		String name = req.getParameter("name");
-		String id = req.getParameter("id");
+		int id = Integer.parseInt(req.getParameter("id"));
 		int attempted = 0, completed = 0;
 		Task t = new Task();
 		t.setID(id);
@@ -122,7 +140,7 @@ public class CronosServlet extends HttpServlet {
 
 	public static String formatAsJson(Task task) {
 		HashMap<String, String> obj = new HashMap<String, String>();
-		obj.put("id", task.getID());
+		obj.put("id", String.valueOf(task.getID()));
 		obj.put("name", task.getName());
 		obj.put("completed", Integer.toString(task.getCompleted()));
 		obj.put("attempted", Integer.toString(task.getAttempted()));

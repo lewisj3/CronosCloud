@@ -19,7 +19,7 @@ public class Task {
 	private String key;
 	
 	@Persistent
-	private String id;
+	private int id;
 	
 
 	public String getName(){
@@ -36,11 +36,11 @@ public class Task {
 		return attempted;
 	}
 	
-	public String getID(){
+	public int getID(){
 		return id;
 	}
 	
-	public void setID(String id){
+	public void setID(int id){
 		this.id = id;
 	}
 	

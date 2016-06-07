@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cronentries>
   <cron>
-    <url>/cronosServlet?cron=true</url>
+    <url>/cronosServlet?op=cron</url>
     <description>daily statistics calculation</description>
     <schedule>every day 00:00</schedule>
   </cron>
