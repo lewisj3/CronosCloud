@@ -3,6 +3,6 @@
   <cron>
     <url>/cronosServlet?op=cron</url>
     <description>daily statistics calculation</description>
-    <schedule>every day 00:00</schedule>
+    <schedule>every 2 hours</schedule>
   </cron>
 </cronentries>
